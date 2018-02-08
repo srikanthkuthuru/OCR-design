@@ -23,12 +23,13 @@ data_transform = transforms.Compose([
 dev_dataset = {x: datasets.ImageFolder(root=rootdir+x+'/',transform=data_transform)
 for x in ['train', 'test']}
 
-dataset_loader = DataLoader(dev_dataset['train'], batch_size=1024, shuffle=True,
+dataset_loader = {x: DataLoader(dev_dataset[x], batch_size=256, shuffle=True,
                                              num_workers=1)
+for x in ['train', 'test']}
 
 #---------------------------------------------------#
 # Train model function
-def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
+def train_model(model, criterion, optimizer, num_epochs=25):
     since = time.time()
 
     best_acc = 0.0
@@ -38,14 +39,14 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        scheduler.step()
+        #scheduler.step()
         model.train(True) 
         
         running_loss = 0.0
-        running_corrects = 0
+        running_corrects = 0.0
 
         # Iterate over data.
-        for data in dataset_loader:
+        for data in dataset_loader['train']:
             # get the inputs
             inputs, labels = data
             # wrap them in Variable
@@ -67,6 +68,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             running_corrects += torch.sum(preds == labels.data)
             #print([preds, labels.data])
             #input("Press Enter to continue...")
+        
+        print(zip(preds.tolist(), labels.data.tolist()))
         epoch_loss = running_loss / len(dev_dataset['train'])
         epoch_acc = running_corrects / len(dev_dataset['train'])
         
@@ -78,14 +81,29 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
     return model
 
+def test_model(model):
+    running_corrects = 0.0
+    for data in dataset_loader['test']:
+        inputs, labels = data
+        # wrap them in Variable
+        inputs, labels = Variable(inputs), Variable(labels)
+        # forward
+        outputs = model.forward(inputs)
+        _, preds = torch.max(outputs.data, 1)
+        running_corrects += torch.sum(preds == labels.data)
+    acc = running_corrects / len(dev_dataset['test'])
+    print('Test Acc: {:.4f}'.format(acc))
+    return
+
+        
 #-----------------------------------------------------------#
 # LeNet-5
 class LeNet(nn.Module):
     def __init__(self):
         super(LeNet, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1   = nn.Linear(16*5*5, 120)
+        self.conv1 = nn.Conv2d(3, 6, 5, padding = 2)
+        self.conv2 = nn.Conv2d(6, 16, 5, padding = 2)
+        self.fc1   = nn.Linear(16*8*8, 120)
         self.fc2   = nn.Linear(120, 84)
         self.fc3   = nn.Linear(84, 46)
 
@@ -97,21 +115,21 @@ class LeNet(nn.Module):
         out = out.view(out.size(0), -1)
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
-        out = self.fc3(out)
+        out = F.sigmoid(self.fc3(out))
         return out
     
     
 model_lenet = LeNet()
 criterion = nn.CrossEntropyLoss()
-optimizer_lenet = optim.SGD(model_lenet.parameters(), lr=0.001, momentum=0.9)
+#optimizer_lenet = optim.SGD(model_lenet.parameters(), lr=0.001, momentum=0.9)
+optimizer_lenet = optim.Adam(model_lenet.parameters(), lr=0.001)
 
 # Decay LR by a factor of 0.1 every 7 epochs
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_lenet, step_size=7, gamma=0.1)
+#exp_lr_scheduler = lr_scheduler.StepLR(optimizer_lenet, step_size=7, gamma=0.1)
 
-model_lenet = train_model(model_lenet, criterion, optimizer_lenet,
-                         exp_lr_scheduler, num_epochs=25)
+model_lenet = train_model(model_lenet, criterion, optimizer_lenet, num_epochs=5)
     
-    
+test_model(model_lenet)    
     
  #%%   
 #--------------------------------------------------------#    
