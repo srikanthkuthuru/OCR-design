@@ -8,6 +8,16 @@
 
 
 
-Thanks to authors in this paper who provided the data on UCI repository: S. Acharya, A.K. Pant and P.K. Gyawali Deep Learning Based Large Scale Handwritten Devanagari Character Recognition,In Proceedings of the 9th International Conference on Software, Knowledge, Information Management and Applications (SKIMA), pp. 121-126, 2015.
+Thanks to authors in this paper who provided the data on UCI repository: S. Acharya, A.K. Pant and P.K. Gyawali Deep Learning Based Large Scale Handwritten Devanagari Character Recognition,In Proceedings of the 9th International Conference on Software, Knowledge, Information Management and Applications (SKIMA), pp. 121-126, 2015.
+
+# Symbol recognition:
+Update-1: 2/10/2018
+Basic LeNet model with Adam optimizer. 
+Learning rate: 0.001
+nEpochs = 150
+Training Error = 0.953
+Test Error = 0.949
+No regularization, No batch-normalization layers. 2 Conv-Max pool layers and 3 FC layers.
+
 
 -Srikanth Kuthuru
