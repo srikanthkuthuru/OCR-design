@@ -14,7 +14,7 @@ import time
 import copy
 
 #Read Data
-rootdir= '/Users/srikanthkuthuru/Downloads/DevanagariHandwrittenCharacterDataset/'
+rootdir = "C:/Users/SKuthuru/Downloads/DevanagariHandwrittenCharacterDataset/"
 a = os.listdir(rootdir+'train/')
 data_transform = transforms.Compose([
         transforms.ToTensor(),
@@ -103,9 +103,9 @@ class LeNet(nn.Module):
         super(LeNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5, padding = 2)
         self.conv2 = nn.Conv2d(6, 16, 5, padding = 2)
-        self.fc1   = nn.Linear(16*8*8, 120)
-        self.fc2   = nn.Linear(120, 84)
-        self.fc3   = nn.Linear(84, 46)
+        self.fc1   = nn.Linear(16*8*8, 500)
+        self.fc2   = nn.Linear(500, 200)
+        self.fc3   = nn.Linear(200, 46)
 
     def forward(self, x):
         out = F.relu(self.conv1(x))
@@ -127,7 +127,7 @@ optimizer_lenet = optim.Adam(model_lenet.parameters(), lr=0.001)
 # Decay LR by a factor of 0.1 every 7 epochs
 #exp_lr_scheduler = lr_scheduler.StepLR(optimizer_lenet, step_size=7, gamma=0.1)
 
-model_lenet = train_model(model_lenet, criterion, optimizer_lenet, num_epochs=5)
+model_lenet = train_model(model_lenet, criterion, optimizer_lenet, num_epochs=150)
     
 test_model(model_lenet)    
     
