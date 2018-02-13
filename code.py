@@ -26,10 +26,10 @@ for x in ['train', 'test']}
 dataset_loader = {x: DataLoader(dev_dataset[x], batch_size=256, shuffle=True,
                                              num_workers=1)
 for x in ['train', 'test']}
-
+#%%
 #---------------------------------------------------#
 # Train model function
-def train_model(model, criterion, optimizer, num_epochs=25):
+def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     since = time.time()
 
     best_acc = 0.0
@@ -62,6 +62,7 @@ def train_model(model, criterion, optimizer, num_epochs=25):
             # backward + optimize
             loss.backward()
             optimizer.step()
+            scheduler.step()
 
             # statistics
             running_loss += loss.data[0] * inputs.size(0)
@@ -102,21 +103,30 @@ class LeNet(nn.Module):
     def __init__(self):
         super(LeNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5, padding = 2)
+        self.bn1 = nn.BatchNorm2d(6)
         self.conv2 = nn.Conv2d(6, 16, 5, padding = 2)
+        self.bn2 = nn.BatchNorm1d(16*8*8)
         self.fc1   = nn.Linear(16*8*8, 120)
+        self.bn3 = nn.BatchNorm1d(120)
         self.fc2   = nn.Linear(120, 84)
+        self.bn4 = nn.BatchNorm1d(84)
         self.fc3   = nn.Linear(84, 46)
 
     def forward(self, x):
         out = F.relu(self.conv1(x))
         out = F.max_pool2d(out, 2)
+        out = self.bn1(out)
         out = F.relu(self.conv2(out))
         out = F.max_pool2d(out, 2)
         out = out.view(out.size(0), -1)
+        out = self.bn2(out)
         out = F.relu(self.fc1(out))
+        out = self.bn3(out)
         out = F.relu(self.fc2(out))
+        out = self.bn4(out)
         out = F.sigmoid(self.fc3(out))
         return out
+    
     
     
 model_lenet = LeNet()
@@ -125,9 +135,9 @@ criterion = nn.CrossEntropyLoss()
 optimizer_lenet = optim.Adam(model_lenet.parameters(), lr=0.001)
 
 # Decay LR by a factor of 0.1 every 7 epochs
-#exp_lr_scheduler = lr_scheduler.StepLR(optimizer_lenet, step_size=7, gamma=0.1)
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer_lenet, step_size=10, gamma=0.1)
 
-model_lenet = train_model(model_lenet, criterion, optimizer_lenet, num_epochs=5)
+model_lenet = train_model(model_lenet, criterion, optimizer_lenet, exp_lr_scheduler, num_epochs=5)
     
 test_model(model_lenet)    
     
